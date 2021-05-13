@@ -10,6 +10,7 @@ router.param("userId", async (req, res, next, userId) => {
   try {
     // const userFound = await User.findById(userId).populate("wishlist").populate("cart");
     const userFound = await User.findById(userId)
+      .select("name email addresses paymentMethods cart wishlist")
       .populate({
         path: "wishlist",
         populate: {
@@ -160,7 +161,7 @@ router
 
 router.get("/:userId", async (req, res) => {
   try {
-    res.status(200).json({ success: true, book: req.user });
+    res.status(200).json({ success: true, user: req.user });
     //* res.status(200).json({success: true, book: {...req.book}})
   } catch (error) {
     console.error(error);

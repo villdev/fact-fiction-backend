@@ -32,25 +32,34 @@ router
       // pagination
       const page = parseInt(req.query.page);
       const results = parseInt(req.query.results);
+      const sort = req.query.sort;
+      let sortQuery = {};
       const startIndex = (page - 1) * results;
       const endIndex = page * results;
 
-      // const allBooks = await Book.find({});
-      // const allBooks = await Book.find({}).limit(results).skip(startIndex);
+      const allBooks = await Book.find({});
+      if (sort === "low-high") sortQuery = { defaultSellingPrice: 1 };
+      else if (sort === "high-low") sortQuery = { defaultSellingPrice: -1 };
+
       const paginatedBooks = {};
       paginatedBooks.books = await Book.find({})
+        .sort(sortQuery)
         .limit(results)
         .skip(startIndex);
-      if (endIndex < paginatedBooks.books.length) {
+      // .sort({ "formats[0].price": -1 });
+
+      paginatedBooks.results = results;
+      paginatedBooks.totalResults = allBooks.length;
+      if (endIndex < paginatedBooks.totalResults) {
         paginatedBooks.next = {
           page: page + 1,
-          results,
+          // results,
         };
       }
       if (startIndex > 0) {
         paginatedBooks.previous = {
           page: page - 1,
-          results,
+          // results,
         };
       }
       if (!paginatedBooks.books) {
@@ -84,6 +93,10 @@ router
           authors: [...book.authors],
           covers: [...book.covers],
           synopsis: book.synopsis,
+          defaultSellingPrice: (
+            book.formats[0].price -
+            (book.formats[0].price * book.formats[0].discount) / 100
+          ).toFixed(2),
           formats: book.formats.map((format) => {
             return {
               type: format.type,
@@ -113,7 +126,6 @@ router
         savedBook.genres.forEach(async (genre) => {
           const genrePresent = await Genre.findOne({ name: genre });
           if (!genrePresent.items.includes(savedBook._id)) {
-            console.log("book name: ", savedBook.name);
             genrePresent.items.push(savedBook._id);
             const savedGenre = await genrePresent.save();
             if (!savedGenre) {
@@ -148,6 +160,20 @@ router.get("/:bookId", async (req, res) => {
       .status(+error.code)
       .json({ success: false, message: "Book not found in database." });
   }
+});
+
+router.get("/test/test", async (req, res) => {
+  try {
+    const allBooks = await Book.find({}).sort({ defaultSellingPrice: 1 });
+    if (!allBooks) {
+      res.status(404).json({ success: false });
+    }
+    res.status(200).json({ success: true, books: allBooks });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false });
+  }
+  // const allBooks = await Book.find({}).sort({ "formats[0].price": 1 });
 });
 
 module.exports = router;

@@ -62,7 +62,12 @@ router
           } else {
             res
               .status(200)
-              .json({ success: true, message: "Product already in wishlist!" });
+              // .json({ success: true, message: "Product already in wishlist!" });
+              .json({
+                success: true,
+                message: "Product already in wishlist!",
+                wishlist,
+              });
           }
           break;
         }

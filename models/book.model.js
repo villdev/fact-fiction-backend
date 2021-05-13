@@ -22,6 +22,7 @@ const bookSchema = new Schema(
       average: { type: Number, default: 0 },
       reviews: [{ type: Schema.Types.ObjectId, ref: "Review" }],
     },
+    defaultSellingPrice: { type: Number, required: true },
     formats: [
       {
         type: {

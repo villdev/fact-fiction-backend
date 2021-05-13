@@ -11,6 +11,10 @@ const cartRoutes = require("./routes/cart.router");
 const wishlistRoutes = require("./routes/wishlist.router");
 
 const app = express();
+// app.set("Access-Control-Allow-Credentials", true);
+// app.use(cors({ origin: "http://localhost:1234", credentials: true }));
+// app.use(cors({ origin: true, credentials: true }));
+// app.use(cors({ origin: true }));
 app.use(cors());
 app.use(express.json());
 

@@ -24,7 +24,7 @@ const cartSchema = new Schema(
       subtotal: { type: Number, default: 0 },
       deliveryCharges: { type: Number, default: 40 },
       discountTotal: { type: Number, default: 0 },
-      total: { type: Number, default: 40 },
+      total: { type: Number, default: 0 },
     },
   },
   { timestamps: true }

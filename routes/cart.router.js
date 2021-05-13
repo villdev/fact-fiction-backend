@@ -9,8 +9,8 @@ const getFormatDetails = (book, currentFormat) => {
   );
   // return book.formats[currentFormatIndex];
   return {
-    price: book.formats[currentFormatIndex].price,
-    discount: (
+    price: +book.formats[currentFormatIndex].price.toFixed(2),
+    discount: +(
       (book.formats[currentFormatIndex].discount / 100) *
       book.formats[currentFormatIndex].price
     ).toFixed(2),
@@ -71,6 +71,11 @@ router
               cart.checkout.subtotal +
               cart.checkout.deliveryCharges -
               cart.checkout.discountTotal;
+
+            cart.checkout.subtotal = +cart.checkout.subtotal.toFixed(2);
+            cart.checkout.discountTotal =
+              +cart.checkout.discountTotal.toFixed(2);
+            cart.checkout.total = +cart.checkout.total.toFixed(2);
             const savedCart = await cart.save();
             if (!savedCart) {
               return res.status(500).json({
@@ -94,7 +99,9 @@ router
           const cartItemIndex = cart.items.findIndex(
             (item) => item.book._id == bookId
           );
-          const newQuantity = cart.items[cartItemIndex].quantity + quantity;
+          const quantityModifiedValue =
+            quantity - cart.items[cartItemIndex].quantity;
+          // negative if quantity decreases | positive if quantity increases
           // TODO check if quantity goes above stock available-------------------------------------------
           // if(cart.items[cartItemIndex].quantity + quantity > cart.items[cartItemIndex].book.)
           //---------------------------------------------------------------------------------------
@@ -102,16 +109,23 @@ router
           // TODO also add condition to check if quantity value is always only -1 or 1
 
           // quantity cant go below 1
-          if (newQuantity >= 1) {
-            cart.items[cartItemIndex].quantity = newQuantity;
+          if (quantity >= 1) {
+            cart.items[cartItemIndex].quantity = quantity;
             const book = await Book.findById(bookId);
             const formatDetail = getFormatDetails(book, format);
-            cart.checkout.subtotal += quantity * formatDetail.price;
-            cart.checkout.discountTotal += quantity * formatDetail.discount;
+            cart.checkout.subtotal +=
+              quantityModifiedValue * formatDetail.price;
+            cart.checkout.discountTotal +=
+              quantityModifiedValue * formatDetail.discount;
             cart.checkout.total =
               cart.checkout.subtotal +
               cart.checkout.deliveryCharges -
               cart.checkout.discountTotal;
+
+            cart.checkout.subtotal = +cart.checkout.subtotal.toFixed(2);
+            cart.checkout.discountTotal =
+              +cart.checkout.discountTotal.toFixed(2);
+            cart.checkout.total = +cart.checkout.total.toFixed(2);
             const updatedCart = await cart.save();
             if (!updatedCart) {
               return res
@@ -142,6 +156,14 @@ router
               cart.checkout.subtotal +
               cart.checkout.deliveryCharges -
               cart.checkout.discountTotal;
+
+            if (cart.items.length === 0) {
+              cart.checkout.total = 0.0;
+            }
+            cart.checkout.subtotal = +cart.checkout.subtotal.toFixed(2);
+            cart.checkout.discountTotal =
+              +cart.checkout.discountTotal.toFixed(2);
+            cart.checkout.total = +cart.checkout.total.toFixed(2);
             const updatedCart = await cart.save();
             if (!updatedCart) {
               return res.status(500).json({
