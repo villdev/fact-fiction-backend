@@ -8,7 +8,7 @@
     "dev": "nodemon index"
   },
   "engines": {
-    "node": "15.2.1"
+    "node": "15.x"
   },
   "keywords": [],
   "author": "Shobhit Kuruvilla",
