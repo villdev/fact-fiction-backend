@@ -65,8 +65,8 @@ router
             cart.items.push(newCartItem);
             const book = await Book.findById(bookId);
             const formatDetail = getFormatDetails(book, format);
-            cart.checkout.subtotal += formatDetail.price;
-            cart.checkout.discountTotal += formatDetail.discount;
+            cart.checkout.subtotal += quantity * formatDetail.price;
+            cart.checkout.discountTotal += quantity * formatDetail.discount;
             cart.checkout.total =
               cart.checkout.subtotal +
               cart.checkout.deliveryCharges -
@@ -90,7 +90,11 @@ router
           } else {
             res
               .status(200)
-              .json({ success: true, message: "Product already in cart!" });
+              .json({
+                success: true,
+                message: "Product already in cart!",
+                cart,
+              });
           }
           break;
         }

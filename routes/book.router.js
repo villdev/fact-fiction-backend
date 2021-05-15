@@ -27,8 +27,6 @@ router
   .route("/")
   .get(async (req, res) => {
     try {
-      // * change below full block to if block in case req.query is empty, else depending on query, filter
-
       // pagination
       const page = parseInt(req.query.page);
       const results = parseInt(req.query.results);
@@ -37,16 +35,81 @@ router
       const startIndex = (page - 1) * results;
       const endIndex = page * results;
 
-      const allBooks = await Book.find({});
+      // filter
+      const priceMin = parseInt(req.query.priceMin) || 0;
+      const priceMax = parseInt(req.query.priceMax) || 5000;
+
+      const genreQuery = req.query.genre;
+      const languageQuery = req.query.language;
+      const discountMin = parseInt(req.query.discount);
+      const searchRegex = req.query.s || "";
+      const searchQuery = {};
+
+      if (searchRegex !== "") {
+        searchQuery.name = { $regex: searchRegex, $options: "i" };
+      }
+
+      let allBooks;
+      if (genreQuery) {
+        // allBooks = await Book.find({})
+        allBooks = await Book.find(searchQuery)
+          .where("defaultSellingPrice")
+          .gte(priceMin)
+          .lte(priceMax)
+          // .where("language")
+          // .equals(languageQuery)
+          // .where("formats[0].discount")
+          // .gte(discountMin)
+          .where("genres")
+          .all(genreQuery);
+      } else {
+        // allBooks = await Book.find({})
+        allBooks = await Book.find(searchQuery)
+          .where("defaultSellingPrice")
+          .gte(priceMin)
+          .lte(priceMax);
+        // .where("formats[0].discount")
+        // .gte(discountMin)
+        // .where("language")
+        // .equals(languageQuery);
+      }
+
       if (sort === "low-high") sortQuery = { defaultSellingPrice: 1 };
       else if (sort === "high-low") sortQuery = { defaultSellingPrice: -1 };
 
       const paginatedBooks = {};
-      paginatedBooks.books = await Book.find({})
-        .sort(sortQuery)
-        .limit(results)
-        .skip(startIndex);
-      // .sort({ "formats[0].price": -1 });
+
+      if (genreQuery) {
+        // paginatedBooks.books = await Book.find({})
+        paginatedBooks.books = await Book.find(searchQuery)
+          .where("defaultSellingPrice")
+          .gte(priceMin)
+          .lte(priceMax)
+          // .where("language")
+          // .equals(languageQuery)
+          // .where("formats[0].discount")
+          // .gte(discountMin)
+          .where("genres")
+          .all(genreQuery)
+          .sort(sortQuery)
+          .limit(results)
+          .skip(startIndex);
+        // .sort({ "formats[0].price": -1 });
+      } else {
+        // paginatedBooks.books = await Book.find({})
+        paginatedBooks.books = await Book.find(searchQuery)
+          .where("defaultSellingPrice")
+          .gte(priceMin)
+          .lte(priceMax)
+          // .where("language")
+          // .equals(languageQuery)
+          // .where("formats[0].discount")
+          // .gte(discountMin)
+          .sort(sortQuery)
+          .limit(results)
+          .skip(startIndex);
+        // .sort({ "formats[0].price": -1 });
+      }
 
       paginatedBooks.results = results;
       paginatedBooks.totalResults = allBooks.length;
