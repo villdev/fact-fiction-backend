@@ -39,77 +39,38 @@ router
       const priceMin = parseInt(req.query.priceMin) || 0;
       const priceMax = parseInt(req.query.priceMax) || 5000;
 
-      const genreQuery = req.query.genre;
-      const languageQuery = req.query.language;
-      const discountMin = parseInt(req.query.discount);
-      const searchRegex = req.query.s || "";
+      const genreQuery = req.query.genre ?? "";
+      const languageQuery = req.query.language ?? "";
+      const discountMin = req.query.discount;
+      const searchRegex = req.query.s ?? "";
       const searchQuery = {};
 
+      searchQuery.defaultSellingPrice = { $gte: priceMin, $lte: priceMax };
+
+      if (genreQuery !== "") {
+        searchQuery.genres = { $all: genreQuery };
+      }
+      if (languageQuery !== "") {
+        searchQuery.language = languageQuery;
+      }
+      // if(discountMin !== "") {
+      // searchQuery.formats = { type: "paperback"}
+      // }
       if (searchRegex !== "") {
         searchQuery.name = { $regex: searchRegex, $options: "i" };
       }
 
-      let allBooks;
-      if (genreQuery) {
-        // allBooks = await Book.find({})
-        allBooks = await Book.find(searchQuery)
-          .where("defaultSellingPrice")
-          .gte(priceMin)
-          .lte(priceMax)
-          // .where("language")
-          // .equals(languageQuery)
-          // .where("formats[0].discount")
-          // .gte(discountMin)
-          .where("genres")
-          .all(genreQuery);
-      } else {
-        // allBooks = await Book.find({})
-        allBooks = await Book.find(searchQuery)
-          .where("defaultSellingPrice")
-          .gte(priceMin)
-          .lte(priceMax);
-        // .where("formats[0].discount")
-        // .gte(discountMin)
-        // .where("language")
-        // .equals(languageQuery);
-      }
+      const allBooks = await Book.find(searchQuery);
 
       if (sort === "low-high") sortQuery = { defaultSellingPrice: 1 };
       else if (sort === "high-low") sortQuery = { defaultSellingPrice: -1 };
 
       const paginatedBooks = {};
 
-      if (genreQuery) {
-        // paginatedBooks.books = await Book.find({})
-        paginatedBooks.books = await Book.find(searchQuery)
-          .where("defaultSellingPrice")
-          .gte(priceMin)
-          .lte(priceMax)
-          // .where("language")
-          // .equals(languageQuery)
-          // .where("formats[0].discount")
-          // .gte(discountMin)
-          .where("genres")
-          .all(genreQuery)
-          .sort(sortQuery)
-          .limit(results)
-          .skip(startIndex);
-        // .sort({ "formats[0].price": -1 });
-      } else {
-        // paginatedBooks.books = await Book.find({})
-        paginatedBooks.books = await Book.find(searchQuery)
-          .where("defaultSellingPrice")
-          .gte(priceMin)
-          .lte(priceMax)
-          // .where("language")
-          // .equals(languageQuery)
-          // .where("formats[0].discount")
-          // .gte(discountMin)
-          .sort(sortQuery)
-          .limit(results)
-          .skip(startIndex);
-        // .sort({ "formats[0].price": -1 });
-      }
+      paginatedBooks.books = await Book.find(searchQuery)
+        .sort(sortQuery)
+        .limit(results)
+        .skip(startIndex);
 
       paginatedBooks.results = results;
       paginatedBooks.totalResults = allBooks.length;
